@@ -32,6 +32,10 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
+Version 2.3.1 ESP32 everslick 30APR2018
+  add IRAM_ATTR attribute to write_bit/read_bit to fix icache miss delay
+  https://github.com/espressif/arduino-esp32/issues/1335
+  
 Version 2.3 ESP32 stickbreaker 28DEC2017
   adjust to use portENTER_CRITICAL(&mux) instead of noInterrupts();
   adjust to use portEXIT_CRITICAL(&mux) instead of Interrupts();
@@ -200,7 +204,11 @@ uint8_t OneWire::reset(void)
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
+#ifdef ARDUINO_ARCH_ESP32
+void IRAM_ATTR OneWire::write_bit(uint8_t v)
+#else
 void OneWire::write_bit(uint8_t v)
+#endif
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
@@ -228,7 +236,11 @@ void OneWire::write_bit(uint8_t v)
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
+#ifdef ARDUINO_ARCH_ESP32
+uint8_t IRAM_ATTR OneWire::read_bit(void)
+#else
 uint8_t OneWire::read_bit(void)
+#endif
 {
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
