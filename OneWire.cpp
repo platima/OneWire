@@ -32,6 +32,11 @@ private email about OneWire).
 OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
+=======
+Version 2.3.1 ESP32 everslick 30APR2018
+  add IRAM_ATTR attribute to write_bit/read_bit to fix icache miss delay
+  https://github.com/espressif/arduino-esp32/issues/1335
+  
 Version 2.3 ESP32 stickbreaker 28DEC2017
   adjust to use portENTER_CRITICAL(&mux) instead of noInterrupts();
   adjust to use portEXIT_CRITICAL(&mux) instead of Interrupts();
@@ -173,8 +178,9 @@ uint8_t IRAM_ATTR OneWire::reset(void)
     volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
     uint8_t r;
     uint8_t retries = 125;
+    noInterrupts();
     DIRECT_MODE_INPUT(reg, mask);
- 
+    interrupts();
     // wait until the wire is high... just in case
     do {
         if (--retries == 0) return 0;
@@ -197,49 +203,58 @@ uint8_t IRAM_ATTR OneWire::reset(void)
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
+#ifdef ARDUINO_ARCH_ESP32
 void IRAM_ATTR OneWire::write_bit(uint8_t v)
+#else
+void OneWire::write_bit(uint8_t v)
+#endif
 {
-    IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
-    volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 
-    if (v & 1) {
+	if (v & 1) {
         noInterrupts();
-        DIRECT_WRITE_LOW(reg, mask);
-        DIRECT_MODE_OUTPUT(reg, mask);  // drive output low
-        delayMicroseconds(10);
-        DIRECT_WRITE_HIGH(reg, mask);   // drive output high
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(10);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
         interrupts();
-        delayMicroseconds(55);
-    } else {
+		delayMicroseconds(55);
+	} else {
         noInterrupts();
-        DIRECT_WRITE_LOW(reg, mask);
-        DIRECT_MODE_OUTPUT(reg, mask);  // drive output low
-        delayMicroseconds(65);
-        DIRECT_WRITE_HIGH(reg, mask);   // drive output high
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(65);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
         interrupts();
-        delayMicroseconds(5);
-    }
+		delayMicroseconds(5);
+	}
 }
 
 //
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
+#ifdef ARDUINO_ARCH_ESP32
 uint8_t IRAM_ATTR OneWire::read_bit(void)
+#else
+uint8_t OneWire::read_bit(void)
+#endif
 {
-    IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
-    volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
-    uint8_t r;
+	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
+	uint8_t r;
+
     noInterrupts();
-    DIRECT_MODE_OUTPUT(reg, mask);
-    DIRECT_WRITE_LOW(reg, mask);
-    delayMicroseconds(3);
-    DIRECT_MODE_INPUT(reg, mask);   // let pin float, pull up will raise
-    delayMicroseconds(10);
-    r = DIRECT_READ(reg, mask);
+	DIRECT_MODE_OUTPUT(reg, mask);
+	DIRECT_WRITE_LOW(reg, mask);
+	delayMicroseconds(3);
+	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+	delayMicroseconds(10);
+	r = DIRECT_READ(reg, mask);
     interrupts();
-    delayMicroseconds(53);
-    return r;
+	delayMicroseconds(53);
+	return r;
 }
 
 //
