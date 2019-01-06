@@ -3,7 +3,7 @@
   
   No changes are required for compatibility with Arduino coding.
 
-Origional Source is Paul's 2.3 version.  Forked 28DEC2017
+Original Source is Paul's 2.3 version.  Forked 28DEC2017
 
 @stickbreaker
 V2.3.1 30APR2018 add IRAM_ATTR to read_bit() write_bit() to solve ICache miss timing failure. 
