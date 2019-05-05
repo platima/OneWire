@@ -33,6 +33,8 @@ OneWire is now very mature code.  No changes other than adding
 definitions for newer hardware support are anticipated.
 
 =======
+Version 2.3.3 ESP32 Stickbreaker 06MAY2019
+  Add a #ifdef to isolate ESP32 mods
 Version 2.3.1 ESP32 everslick 30APR2018
   add IRAM_ATTR attribute to write_bit/read_bit to fix icache miss delay
   https://github.com/espressif/arduino-esp32/issues/1335
@@ -172,7 +174,11 @@ OneWire::OneWire(uint8_t pin)
 //
 // Returns 1 if a device asserted a presence pulse, 0 otherwise.
 //
+#ifdef ARDUINO_ARCH_ESP32
 uint8_t IRAM_ATTR OneWire::reset(void)
+#else
+uint8_t OneWire::reset(void)
+#endif
 {
     IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
     volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
