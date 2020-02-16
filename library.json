@@ -46,13 +46,16 @@
         },
         {
             "name": "Scott Roberts"
+        },
+        {
+            "name": "Keith Poole"
         }
     ],
     "repository": {
         "type": "git",
         "url": "https://github.com/PaulStoffregen/OneWire"
     },
-    "version": "2.3.2",
+    "version": "2.3.3",
     "homepage": "https://www.pjrc.com/teensy/td_libs_OneWire.html",
     "frameworks": "Arduino",
     "examples": [
